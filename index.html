@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Betaflight · VTX Table</title>
+
+  <style>
+    :root {
+      font-family: Inter, system-ui, sans-serif;
+      color: #e8edf7;
+      background: #0b1020;
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 18px;
+    }
+
+    main {
+      max-width: 1150px;
+      margin: auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(25px, 4vw, 36px);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    .subtitle {
+      margin: 0 0 26px;
+      color: #9cabc3;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      padding: 24px;
+      border: 1px solid #29354b;
+      border-radius: 18px;
+      background: #131d30;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .badge {
+      padding: 5px 9px;
+      border-radius: 7px;
+      background: #263b59;
+      color: #a6d0ff;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #b8c5da;
+      font-size: 14px;
+    }
+
+    select {
+      width: 100%;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #384761;
+      border-radius: 10px;
+      background: #0c1425;
+      color: #eef4ff;
+      font: inherit;
+    }
+
+    select:focus-visible,
+    textarea:focus-visible,
+    button:focus-visible {
+      outline: 2px solid #68aaff;
+      outline-offset: 3px;
+    }
+
+    select:disabled {
+      opacity: .5;
+    }
+
+    .preview {
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      margin-top: 22px;
+      padding: 18px;
+      border: 1px dashed #35435d;
+      border-radius: 12px;
+      background: #0c1425;
+    }
+
+    .preview img {
+      display: block;
+      max-width: 100%;
+      max-height: 250px;
+      object-fit: contain;
+    }
+
+    .placeholder {
+      color: #7d8da8;
+      text-align: center;
+    }
+
+    .frequency {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #1b3044;
+      color: #9fd9ef;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 500px;
+      resize: vertical;
+      padding: 16px;
+      border: 1px solid #34425b;
+      border-radius: 12px;
+      background: #080f1c;
+      color: #bbefca;
+      font: 13px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+      tab-size: 2;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 9px;
+      background: #397ef5;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #293852;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: default;
+    }
+
+    .save-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 16px;
+      margin-bottom: 0;
+    }
+
+    .save-option input {
+      width: 17px;
+      height: 17px;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 18px 0;
+      color: #99b8e1;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .status.error {
+      color: #ffacac;
+    }
+
+    .note {
+      margin-top: 22px;
+      padding: 16px 20px;
+      border: 1px solid #5a4628;
+      border-radius: 12px;
+      background: #292318;
+      color: #ddc89d;
+      font-size: 13px;
+    }
+
+    .hint {
+      margin: 14px 0 0;
+      color: #8e9db5;
+      font-size: 13px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 850px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      textarea {
+        min-height: 420px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .fields {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <h1>Настройка VTX Table</h1>
+  <p class="subtitle">
+    Генератор CLI-конфигурации видеопередатчика для Betaflight
+  </p>
+
+  <div class="layout">
+    <section class="card">
+      <div class="card-header">
+        <h2>Видеопередатчик</h2>
+        <span class="badge">VTX SETTINGS</span>
+      </div>
+
+      <div class="fields">
+        <div class="full">
+          <label for="vtx">Модель видеопередатчика</label>
+          <select id="vtx" disabled>
+            <option value="">Не выбран</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="protocol">Протокол</label>
+          <select id="protocol" disabled>
+            <option value="8192">IRC Tramp (8192)</option>
+            <option value="2048">SmartAudio (2048)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="uart">Порт UART</label>
+          <select id="uart" disabled></select>
+        </div>
+
+        <div>
+          <label for="band">BAND по умолчанию</label>
+          <select id="band" disabled>
+            <option value="">—</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="channel">Канал по умолчанию</label>
+          <select id="channel" disabled>
+            <option value="">—</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="frequency" id="frequency">
+        Частота: —
+      </div>
+
+      <div class="preview">
+        <img id="photo" alt="" hidden>
+        <span class="placeholder" id="photoPlaceholder">
+          Выберите видеопередатчик
+        </span>
+      </div>
+
+      <p class="hint">
+        UART1 соответствует serial 0, UART2 — serial 1 и так далее.
+        Выбирайте только UART, который существует на вашем контроллере.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>CLI-конфигурация</h2>
+        <span class="badge">BETАFLIGHT</span>
+      </div>
+
+      <textarea
+        id="cli"
+        aria-label="CLI-конфигурация"
+        readonly
+        spellcheck="false"
+        placeholder="Выберите видеопередатчик для формирования конфигурации."
+      ></textarea>
+
+      <label class="save-option">
+        <input id="appendSave" type="checkbox">
+        Добавить команду save в конце
+      </label>
+
+      <div class="actions">
+        <button id="copy" disabled>Скопировать CLI</button>
+        <button id="download" class="secondary" disabled>
+          Скачать .txt
+        </button>
+      </div>
+
+      <p class="hint">
+        Вставьте команды в CLI Betaflight Configurator.
+        Для сохранения изменений выполните save:
+        контроллер сохранит настройки и перезагрузится.
+      </p>
+    </section>
+  </div>
+
+  <div id="status" class="status" role="status" aria-live="polite">
+    Загрузка каталога…
+  </div>
+
+  <div class="note">
+    Строка serial заменяет назначение выбранного UART, а не добавляет
+    функцию к существующим. Не выбирайте порт приёмника, GPS или другого
+    устройства. Программа не читает настройки контроллера и не очищает
+    назначение VTX на других UART. Перед применением сохраните резервную
+    копию конфигурации и проверьте разрешённые частоты и мощности.
+  </div>
+</main>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const ui = {
+  vtx: $("vtx"),
+  protocol: $("protocol"),
+  uart: $("uart"),
+  band: $("band"),
+  channel: $("channel"),
+  frequency: $("frequency"),
+  photo: $("photo"),
+  photoPlaceholder: $("photoPlaceholder"),
+  cli: $("cli"),
+  appendSave: $("appendSave"),
+  copy: $("copy"),
+  download: $("download"),
+  status: $("status")
+};
+
+let catalog = [];
+let current = null;
+let selectedEntry = null;
+let loadVersion = 0;
+
+function setStatus(message, error = false) {
+  ui.status.textContent = message;
+  ui.status.classList.toggle("error", error);
+}
+
+function addOption(select, value, label) {
+  select.add(new Option(label, String(value)));
+}
+
+function populateUarts(extraIdentifier = null) {
+  ui.uart.replaceChildren();
+
+  // Обычные аппаратные UART: CLI identifier = UART number - 1.
+  for (let id = 0; id < 8; id++) {
+    addOption(ui.uart, id, `UART${id + 1}`);
+  }
+
+  if (extraIdentifier !== null && extraIdentifier > 7) {
+    addOption(
+      ui.uart,
+      extraIdentifier,
+      `UART${extraIdentifier + 1}`
+    );
+  }
+
+  ui.uart.value = "0";
+}
+
+populateUarts();
+
+function assetURL(folder, filename) {
+  return new URL(
+    `vtx_catalog/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`,
+    document.baseURI
+  );
+}
+
+function resetConfiguration() {
+  current = null;
+  selectedEntry = null;
+
+  ui.protocol.value = "8192";
+  populateUarts();
+
+  for (const select of [
+    ui.protocol, ui.uart, ui.band, ui.channel
+  ]) {
+    select.disabled = true;
+  }
+
+  ui.band.replaceChildren(new Option("—", ""));
+  ui.channel.replaceChildren(new Option("—", ""));
+
+  ui.cli.value = "";
+  ui.frequency.textContent = "Частота: —";
+  ui.copy.disabled = true;
+  ui.download.disabled = true;
+
+  ui.photo.onload = null;
+  ui.photo.onerror = null;
+  ui.photo.hidden = true;
+  ui.photo.removeAttribute("src");
+  ui.photo.alt = "";
+
+  ui.photoPlaceholder.hidden = false;
+  ui.photoPlaceholder.textContent = "Выберите видеопередатчик";
+}
+
+function parseConfiguration(text) {
+  // Убираем BOM и невидимые символы, встречающиеся при копировании.
+  const cleaned = text
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/\u00A0/g, " ");
+
+  const lines = cleaned
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith("#"));
+
+  const tableLines = lines.filter(line => /^vtxtable\s+/i.test(line));
+
+  if (!tableLines.length) {
+    throw new Error("В файле отсутствуют команды vtxtable.");
+  }
+
+  const countMatch = tableLines
+    .find(line => /^vtxtable\s+bands\s+\d+$/i.test(line))
+    ?.match(/^vtxtable\s+bands\s+(\d+)$/i);
+
+  const channelsMatch = tableLines
+    .find(line => /^vtxtable\s+channels\s+\d+$/i.test(line))
+    ?.match(/^vtxtable\s+channels\s+(\d+)$/i);
+
+  const bandCount = Number(countMatch?.[1]);
+  const channelCount = Number(channelsMatch?.[1]);
+
+  if (
+    !Number.isInteger(bandCount) || bandCount < 1 || bandCount > 32 ||
+    !Number.isInteger(channelCount) || channelCount < 1 || channelCount > 32
+  ) {
+    throw new Error("Некорректное количество BAND или каналов.");
+  }
+
+  const bands = [];
+
+  for (const line of tableLines) {
+    const match = line.match(
+      /^vtxtable\s+band\s+(\d+)\s+(\S+)\s+(\S+)\s+(CUSTOM|FACTORY)\s+(.+)$/i
+    );
+
+    if (!match) continue;
+
+    const frequencies = match[5].split(/\s+/).map(Number);
+
+    if (
+      frequencies.length !== channelCount ||
+      frequencies.some(value =>
+        !Number.isInteger(value) || value < 0 || value > 65535
+      )
+    ) {
+      throw new Error(`Некорректные частоты в BAND ${match[1]}.`);
+    }
+
+    bands.push({
+      id: Number(match[1]),
+      name: match[2],
+      letter: match[3],
+      frequencies
+    });
+  }
+
+  bands.sort((a, b) => a.id - b.id);
+
+  if (
+    bands.length !== bandCount ||
+    bands.some((band, index) => band.id !== index + 1)
+  ) {
+    throw new Error(
+      "Список BAND должен соответствовать vtxtable bands " +
+      "и иметь последовательные номера от 1."
+    );
+  }
+
+  // Берём только serial с функцией управления VTX.
+  const serials = [];
+
+  for (const line of lines) {
+    const match = line.match(
+      /^serial\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/i
+    );
+
+    if (!match) continue;
+
+    const mask = Number(match[2]);
+    const tramp = (mask & 8192) !== 0;
+    const smartAudio = (mask & 2048) !== 0;
+
+    if (!tramp && !smartAudio) continue;
+
+    if (tramp && smartAudio) {
+      throw new Error(
+        "В serial одновременно указаны IRC Tramp и SmartAudio."
+      );
+    }
+
+    serials.push({
+      identifier: Number(match[1]),
+      mask,
+      protocol: tramp ? 8192 : 2048,
+      rates: match.slice(3).join(" ")
+    });
+  }
+
+  if (serials.length > 1) {
+    throw new Error(
+      "В конфигурации найдено несколько serial для VTX. " +
+      "Оставьте одну строку."
+    );
+  }
+
+  const serial = serials[0] || null;
+
+  // Идентификаторы 20, 30 и т.п. могут обозначать USB/SoftSerial,
+  // поэтому не преобразуем их автоматически в аппаратный UART.
+  if (serial && serial.identifier > 19) {
+    throw new Error(
+      `serial ${serial.identifier} не распознан как аппаратный UART.`
+    );
+  }
+
+  // Сохраняем VTX-настройки, но не посторонние команды файла.
+  const master = new Map();
+
+  for (const line of lines) {
+    const match = line.match(/^set\s+(vtx_\w+)\s*=\s*(.+)$/i);
+
+    if (match) {
+      master.set(match[1].toLowerCase(), match[2]);
+    }
+  }
+
+  const requestedBand = Number(master.get("vtx_band"));
+  const requestedChannel = Number(master.get("vtx_channel"));
+
+  const defaultBand = bands.some(band => band.id === requestedBand)
+    ? requestedBand
+    : bands[0].id;
+
+  const defaultChannel =
+    Number.isInteger(requestedChannel) &&
+    requestedChannel >= 1 &&
+    requestedChannel <= channelCount
+      ? requestedChannel
+      : 1;
+
+  return {
+    tableLines,
+    bands,
+    channelCount,
+    serial,
+    master,
+    defaultBand,
+    defaultChannel
+  };
+}
+
+function updateChannels(preferredChannel = Number(ui.channel.value) || 1) {
+  if (!current) return;
+
+  const band = current.bands.find(
+    item => item.id === Number(ui.band.value)
+  );
+
+  ui.channel.replaceChildren();
+
+  band.frequencies.forEach((frequency, index) => {
+    addOption(
+      ui.channel,
+      index + 1,
+      frequency === 0
+        ? `${index + 1} — недоступен`
+        : `${index + 1} — ${frequency} МГц`
+    );
+  });
+
+  ui.channel.value = String(
+    Math.min(Math.max(preferredChannel, 1), current.channelCount)
+  );
+}
+
+function generateCLI() {
+  if (!current) return;
+
+  const bandId = Number(ui.band.value);
+  const channelId = Number(ui.channel.value);
+  const band = current.bands.find(item => item.id === bandId);
+  const frequency = band.frequencies[channelId - 1];
+
+  ui.frequency.textContent = frequency
+    ? `Частота: ${frequency} МГц · ${band.name} · канал ${channelId}`
+    : "Частота: канал недоступен, в таблице указано 0";
+
+  if (!frequency) {
+    ui.cli.value = "";
+    ui.copy.disabled = true;
+    ui.download.disabled = true;
+    return;
+  }
+
+  const rates = current.serial?.rates || "115200 57600 0 115200";
+
+  const serialLine =
+    `serial ${ui.uart.value} ${ui.protocol.value} ${rates}`;
+
+  const master = new Map(current.master);
+
+  master.set("vtx_band", String(bandId));
+  master.set("vtx_channel", String(channelId));
+
+  // Если файл содержит явную частоту, синхронизируем её с выбором.
+  if (master.has("vtx_freq")) {
+    master.set("vtx_freq", String(frequency));
+  }
+
+  const masterLines = [
+    `set vtx_band = ${bandId}`,
+    `set vtx_channel = ${channelId}`
+  ];
+
+  for (const [key, value] of master) {
+    if (key === "vtx_band" || key === "vtx_channel") continue;
+    masterLines.push(`set ${key} = ${value}`);
+  }
+
+  const sections = [
+    "# serial",
+    serialLine,
+    "",
+    "# vtxtable",
+    ...current.tableLines,
+    "",
+    "# master",
+    ...masterLines
+  ];
+
+  if (ui.appendSave.checked) {
+    sections.push("", "save");
+  }
+
+  ui.cli.value = sections.join("\n") + "\n";
+  ui.copy.disabled = false;
+  ui.download.disabled = false;
+}
+
+function loadPhoto(entry, version) {
+  ui.photoPlaceholder.textContent = "Загрузка фотографии…";
+
+  ui.photo.onload = () => {
+    if (version !== loadVersion) return;
+
+    ui.photo.hidden = false;
+    ui.photoPlaceholder.hidden = true;
+  };
+
+  ui.photo.onerror = () => {
+    if (version !== loadVersion) return;
+
+    ui.photo.hidden = true;
+    ui.photoPlaceholder.hidden = false;
+    ui.photoPlaceholder.textContent = "Фотография не добавлена";
+  };
+
+  ui.photo.alt = entry.name;
+  ui.photo.src = assetURL(entry.folder, "фото.webp").href;
+}
+ui.vtx.addEventListener("change", async () => {
+  const version = ++loadVersion;
+  const value = ui.vtx.value;
+
+  resetConfiguration();
+
+  if (value === "") {
+    setStatus("Выберите видеопередатчик.");
+    return;
+  }
+
+  const entry = catalog[Number(value)];
+
+  setStatus(`Загрузка: ${entry.name}…`);
+  ui.photoPlaceholder.textContent = "Загрузка конфигурации…";
+
+  try {
+    const response = await fetch(
+      assetURL(entry.folder, "конфигурация.txt"),
+      { cache: "no-cache" }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Не удалось загрузить конфигурация.txt: HTTP ${response.status}`
+      );
+    }
+
+    const text = await response.text();
+
+    // Не применяем устаревший ответ при быстром переключении модели.
+    if (version !== loadVersion) return;
+
+    current = parseConfiguration(text);
+    selectedEntry = entry;
+
+    const serial = current.serial;
+
+    ui.protocol.value = String(serial?.protocol || 8192);
+
+    populateUarts(serial?.identifier ?? null);
+    ui.uart.value = String(serial?.identifier ?? 0);
+
+    ui.band.replaceChildren();
+
+    for (const band of current.bands) {
+      addOption(
+        ui.band,
+        band.id,
+        `${band.id} · ${band.name} (${band.letter})`
+      );
+    }
+
+    ui.band.value = String(current.defaultBand);
+    updateChannels(current.defaultChannel);
+
+    for (const select of [
+      ui.protocol, ui.uart, ui.band, ui.channel
+    ]) {
+      select.disabled = false;
+    }
+
+    generateCLI();
+    loadPhoto(entry, version);
+
+    const messages = [`Загружено: ${entry.name}.`];
+
+    if (serial) {
+      messages.push("Протокол и UART определены из конфигурации.");
+
+      if (serial.mask !== serial.protocol) {
+        messages.push(
+          "В исходной маске serial были дополнительные функции. " +
+          "В CLI оставлена только выбранная функция VTX."
+        );
+      }
+    } else {
+      messages.push(
+        "Строка serial для VTX отсутствует: " +
+        "выберите правильные протокол и UART вручную."
+      );
+    }
+
+    setStatus(messages.join("\n"));
+  } catch (error) {
+    if (version !== loadVersion) return;
+
+    resetConfiguration();
+    ui.photoPlaceholder.textContent = "Ошибка загрузки конфигурации";
+    setStatus(error.message, true);
+  }
+});
+
+ui.band.addEventListener("change", () => {
+  updateChannels();
+  generateCLI();
+});
+
+for (const element of [
+  ui.protocol, ui.uart, ui.channel, ui.appendSave
+]) {
+  element.addEventListener("change", generateCLI);
+}
+
+ui.copy.addEventListener("click", async () => {
+  if (!ui.cli.value) return;
+
+  try {
+    await navigator.clipboard.writeText(ui.cli.value);
+    setStatus("CLI скопирован в буфер обмена.");
+  } catch {
+    ui.cli.focus();
+    ui.cli.select();
+
+    setStatus(
+      "Автоматическое копирование недоступно. " +
+      "Текст выделен: нажмите Ctrl+C или Cmd+C."
+    );
+  }
+});
+
+ui.download.addEventListener("click", () => {
+  if (!ui.cli.value || !selectedEntry) return;
+
+  const blob = new Blob(
+    [ui.cli.value],
+    { type: "text/plain;charset=utf-8" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  const filename = selectedEntry.name
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "_");
+
+  link.href = url;
+  link.download = `${filename}-CLI.txt`;
+
+  document.body.append(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+async function loadCatalog() {
+  try {
+    const response = await fetch(
+      new URL("vtx_catalog/index.json", document.baseURI),
+      { cache: "no-cache" }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Не удалось загрузить каталог: HTTP ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error("Каталог index.json должен содержать массив.");
+    }
+
+    for (const entry of data) {
+      if (
+        !entry ||
+        typeof entry.name !== "string" ||
+        !entry.name.trim() ||
+        typeof entry.folder !== "string" ||
+        !entry.folder.trim() ||
+        /[/\\]/.test(entry.folder) ||
+        entry.folder === "." ||
+        entry.folder === ".."
+      ) {
+        throw new Error(
+          "У каждой записи каталога должны быть name и folder. " +
+          "folder — имя одной папки внутри vtx_catalog."
+        );
+      }
+    }
+
+    catalog = data;
+
+    catalog.forEach((entry, index) => {
+      addOption(ui.vtx, index, entry.name);
+    });
+
+    ui.vtx.disabled = false;
+
+    setStatus(
+      catalog.length
+        ? "Выберите видеопередатчик."
+        : "Каталог пуст. Добавьте передатчики в vtx_catalog/index.json."
+    );
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+}
+
+loadCatalog();
+</script>
+</body>
+</html>
