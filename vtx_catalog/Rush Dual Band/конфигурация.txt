@@ -1,6 +1,3 @@
-# serial 
-serial 0 8192 115200 57600 0 115200 
-
 # vtxtable (Rush 4.9G/5.8G 2.5W Dual-Band VTX 56Ch)
 vtxtable bands 7
 vtxtable channels 8
